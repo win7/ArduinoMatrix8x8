@@ -267,11 +267,14 @@ byte human2[] = {
   B01010101
 };
 
-char text1[]= "TE LLEVARE EN MI CORAZON         ";
-char text2[]= "NUNCA TE OLVIDARE         ";
-char text3[]= "I LOVE YOU         ";
+char text1[]= " You're incredible. I've been looking for you all my life.         ";
+char text2[]= "Together, with you, is my favorite place to be.         ";
+char text3[]= "I LOVE YOU...         ";
 
 MaxMatrix m(DIN, CS, CLK, TOTAL_DISPLAY);
+const int intensity_min = 1;
+const int intensity_max = 7;
+
 int rand_view;
 int rand_effect;
 int rand_delay;
@@ -281,14 +284,15 @@ byte buffer[10];
 void setup() {
   Serial.begin(9600);
   Serial.println("Run...");
-  m.init();                                 // module initialize
-  m.setIntensity(7);                        // dot matix intensity 0-15
+  m.init();                               // module initialize
+  m.setIntensity(intensity_min);          // dot matix intensity 0-15
   randomSeed(analogRead(0));
 }
 void loop() {
-  rand_view = random(0, 23);              // random number from 0 to 13
-  rand_effect = random(0, 4);
-  rand_delay = random(1, 6);
+  rand_view = random(0, 23);              // random number from 0 to 22
+  rand_effect = random(0, 4);             // random number from 0 to 3
+  rand_delay = random(1, 6);              // random number from 1 to 5
+  // m.setIntensity(intensity_min);
   switch (rand_view) {
     case 0:
       PrintStringWithShift(text1, rand_delay * 50);      // (text, scrolling speed)
@@ -355,7 +359,7 @@ void loop() {
       break;
     default:
       count_special++;
-      if (count_special == 21) {
+      if (count_special == 7) {
         PrintStringWithShift(text3, rand_delay * 50);
         count_special = 0;
       }
@@ -452,7 +456,7 @@ void Ajedrex(int delay_) {
 }
 
 void BrightnessUp (int delay_) {
-  for (int k = 0; k < 16; k+=1) {
+  for (int k = 0; k < intensity_max; k+=1) {
       m.setIntensity(k);
       delay(delay_);
   
@@ -460,8 +464,8 @@ void BrightnessUp (int delay_) {
 }
 
 void BrightnessDown (int delay_) {
-  for (int k = 0; k < 16; k+=1) {
-      m.setIntensity(15 - k);
+  for (int k = 0; k < intensity_max; k+=1) {
+      m.setIntensity(intensity_max - 1 - k);
       delay(delay_);
     
   }
@@ -563,7 +567,7 @@ void ImagePWM(byte *data, int delay_) {
     delay(500);
     BrightnessUp(delay_);
   }
-  m.setIntensity(7);  
+  m.setIntensity(intensity_min);  
 }
 
 void ImageBlink (byte *data, int delay_) {
@@ -578,12 +582,35 @@ void ImageBlink (byte *data, int delay_) {
 void RandomPoint (int delay_) {
   int row_;
   int col_;
-  for (int i = 0; i < 32 * (delay_ / 50); i++) {
+  int count = 0;
+  int pinMatrix[8][8] = {
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0},
+    {0, 0, 0, 0, 0, 0, 0, 0}
+  };
+  /* for (int i = 0; i < 32 * (delay_ / 50); i++) {
     row_ = random(0, 8);
     col_ = random(0, 8);
     m.setDot(row_, col_, true);
     delay(delay_);
+  } */
+  while (count < 64) {
+    row_ = random(0, 8);
+    col_ = random(0, 8);
+    if (pinMatrix[row_][col_] == 0) {
+      m.setDot(row_, col_, true);
+      delay(delay_);
+      
+      pinMatrix[row_][col_] = 1;
+      count++;
+    }
   }
+  delay(delay_);
   for (int row = 0; row < 8; row++) {
     for (int col = 0; col < 8; col++) {
       m.setDot(row, col, false);
